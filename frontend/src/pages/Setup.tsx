@@ -20,6 +20,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -94,6 +95,9 @@ function BeansTab() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add Bean</DialogTitle>
+              <DialogDescription>
+                Add a new coffee bean to your collection.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -240,6 +244,9 @@ function GrindersTab() {
           <DialogContent className="max-h-[85svh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add Grinder</DialogTitle>
+              <DialogDescription>
+                Configure your grinder and its adapter profile.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -456,6 +463,9 @@ function MachinesTab() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add Machine</DialogTitle>
+              <DialogDescription>
+                Add a new espresso machine.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
