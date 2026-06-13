@@ -1,8 +1,44 @@
 from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from app.enums import Intensity, ScaleType, Taste
+
+# ── User ─────────────────────────────────────────────────────────────────────
+
+
+class UserCreate(BaseModel):
+    name: str
+    pin: str | None = None
+
+
+class UserLogin(BaseModel):
+    pin: str | None = None
+
+
+class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    has_pin: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def _compute_has_pin(cls, data):
+        if hasattr(data, "pin_hash"):
+            return {
+                "id": data.id,
+                "name": data.name,
+                "has_pin": data.pin_hash is not None,
+            }
+        return data
+
+
+class UserLoginResponse(BaseModel):
+    user: UserResponse
+    token: str
+
 
 # ── Bean ─────────────────────────────────────────────────────────────────────
 

@@ -1,11 +1,11 @@
 import os
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from alembic import context
 from app.database import Base
-from app.models import Bean, Grinder, Machine, Shot  # noqa: F401
+from app.models import Bean, Grinder, Machine, Preference, Shot, User  # noqa: F401
 
 config = context.config
 

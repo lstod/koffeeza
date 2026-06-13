@@ -30,9 +30,11 @@ import type {
   Taste,
 } from "@/lib/types";
 import { TASTE_OPTIONS, INTENSITY_OPTIONS } from "@/lib/types";
+import { useAuth } from "@/contexts/AuthContext";
 
-const LOCALSTORAGE_GRINDER_KEY = "koffeeza_grinder_id";
-const LOCALSTORAGE_MACHINE_KEY = "koffeeza_machine_id";
+function userKey(userId: number, key: string) {
+  return `koffeeza_user_${userId}_${key}`;
+}
 
 const TASTE_LABELS: Record<Taste, string> = {
   SOUR: "Sour",
@@ -51,6 +53,9 @@ const CONFIDENCE_VARIANT: Record<string, "default" | "secondary" | "outline"> =
 
 export function LogShot() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const GRINDER_KEY = userKey(user!.id, "grinder_id");
+  const MACHINE_KEY = userKey(user!.id, "machine_id");
 
   const [beans, setBeans] = useState<BeanResponse[]>([]);
   const [grinders, setGrinders] = useState<GrinderResponse[]>([]);
@@ -89,11 +94,11 @@ export function LogShot() {
         const prefs = await fetchPreferences();
         const savedGrinder =
           prefs.grinder_id?.toString() ??
-          localStorage.getItem(LOCALSTORAGE_GRINDER_KEY) ??
+          localStorage.getItem(GRINDER_KEY) ??
           "";
         const savedMachine =
           prefs.machine_id?.toString() ??
-          localStorage.getItem(LOCALSTORAGE_MACHINE_KEY) ??
+          localStorage.getItem(MACHINE_KEY) ??
           "";
         if (savedGrinder && g.some((x) => x.id.toString() === savedGrinder))
           setGrinderId(savedGrinder);
@@ -101,9 +106,9 @@ export function LogShot() {
           setMachineId(savedMachine);
       } catch {
         const savedGrinder =
-          localStorage.getItem(LOCALSTORAGE_GRINDER_KEY) ?? "";
+          localStorage.getItem(GRINDER_KEY) ?? "";
         const savedMachine =
-          localStorage.getItem(LOCALSTORAGE_MACHINE_KEY) ?? "";
+          localStorage.getItem(MACHINE_KEY) ?? "";
         if (savedGrinder && g.some((x) => x.id.toString() === savedGrinder))
           setGrinderId(savedGrinder);
         if (savedMachine && m.some((x) => x.id.toString() === savedMachine))
@@ -111,7 +116,7 @@ export function LogShot() {
       }
     }
     load();
-  }, []);
+  }, [GRINDER_KEY, MACHINE_KEY]);
 
   const triggerRecall = useCallback(
     async (bean: string, grinder: string, machine: string) => {
@@ -143,13 +148,13 @@ export function LogShot() {
 
   function handleGrinderChange(value: string) {
     setGrinderId(value);
-    localStorage.setItem(LOCALSTORAGE_GRINDER_KEY, value);
+    localStorage.setItem(GRINDER_KEY, value);
     triggerRecall(beanId, value, machineId);
   }
 
   function handleMachineChange(value: string) {
     setMachineId(value);
-    localStorage.setItem(LOCALSTORAGE_MACHINE_KEY, value);
+    localStorage.setItem(MACHINE_KEY, value);
     triggerRecall(beanId, grinderId, value);
   }
 

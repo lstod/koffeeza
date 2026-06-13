@@ -59,12 +59,15 @@ SEED_GRINDERS: list[dict] = [
 ]
 
 
-def seed_grinders(session: Session) -> int:
+def seed_grinders(session: Session, user_id: int | None = None) -> int:
     """Insert seed grinder profiles if the table is empty. Returns count inserted."""
     if session.query(Grinder).count() > 0:
         return 0
 
     for data in SEED_GRINDERS:
-        session.add(Grinder(**data))
+        row = dict(data)
+        if user_id is not None:
+            row["user_id"] = user_id
+        session.add(Grinder(**row))
     session.commit()
     return len(SEED_GRINDERS)

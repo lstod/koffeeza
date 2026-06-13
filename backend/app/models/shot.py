@@ -11,6 +11,7 @@ class Shot(Base):
     __tablename__ = "shots"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     bean_id: Mapped[int] = mapped_column(ForeignKey("beans.id"))
     grinder_id: Mapped[int] = mapped_column(ForeignKey("grinders.id"))
     machine_id: Mapped[int] = mapped_column(ForeignKey("machines.id"))

@@ -2,6 +2,7 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { LogShot } from "./LogShot";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 vi.mock("@/lib/api", () => ({
   fetchBeans: vi.fn().mockResolvedValue([
@@ -45,13 +46,31 @@ vi.mock("@/lib/api", () => ({
     shot_id: null,
   }),
   createShot: vi.fn(),
+  setOnUnauthorized: vi.fn(),
+  setToken: vi.fn(),
+  clearToken: vi.fn(),
 }));
 
+function setFakeAuth() {
+  const token =
+    "header." +
+    btoa(JSON.stringify({ sub: "1", exp: Math.floor(Date.now() / 1000) + 3600 })) +
+    ".sig";
+  localStorage.setItem("koffeeza_token", token);
+  localStorage.setItem(
+    "koffeeza_user",
+    JSON.stringify({ id: 1, name: "Test", has_pin: false }),
+  );
+}
+
 async function renderLogShot() {
+  setFakeAuth();
   await act(async () => {
     render(
       <MemoryRouter>
-        <LogShot />
+        <AuthProvider>
+          <LogShot />
+        </AuthProvider>
       </MemoryRouter>,
     );
   });
