@@ -85,7 +85,7 @@ class ShotCreate(BaseModel):
     dose_g: float
     yield_g: float
     time_s: float
-    taste: Taste
+    taste: Taste | None = None
     intensity: Intensity | None = None
     roast_date: date | None = None
 
@@ -101,7 +101,7 @@ class ShotResponse(BaseModel):
     dose_g: float
     yield_g: float
     time_s: float
-    taste: Taste
+    taste: Taste | None
     intensity: Intensity | None
     reason_code: str
     roast_date: date | None

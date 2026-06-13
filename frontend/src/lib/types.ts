@@ -91,7 +91,7 @@ export interface ShotCreate {
   dose_g: number;
   yield_g: number;
   time_s: number;
-  taste: Taste;
+  taste: Taste | null;
   intensity: Intensity | null;
   roast_date: string | null;
 }
@@ -105,7 +105,7 @@ export interface ShotResponse {
   dose_g: number;
   yield_g: number;
   time_s: number;
-  taste: Taste;
+  taste: Taste | null;
   intensity: Intensity | null;
   reason_code: string;
   roast_date: string | null;

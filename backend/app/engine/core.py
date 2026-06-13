@@ -15,7 +15,7 @@ class ShotInput:
     dose_g: float
     yield_g: float
     time_s: float
-    taste: Taste
+    taste: Taste | None = None
     intensity: Intensity | None = None
     roast_date: date | None = None
 
@@ -59,20 +59,34 @@ def recommend(shot: ShotInput, config: EngineConfig = _DEFAULT_CONFIG) -> Decisi
         "time_s": shot.time_s,
         "t_lo": t_lo,
         "t_hi": t_hi,
-        "taste": shot.taste.value,
+        "taste": shot.taste.value if shot.taste else None,
     }
 
     # Channeling uses the standard window (ratio 2.0) — contradictory taste is
     # only meaningful relative to absolute extraction speed, not a shifted target.
+    # Skipped entirely when taste is not provided.
     base_lo, base_hi = _time_window(2.0)
     ch_fast = _is_fast(shot.time_s, base_lo)
     ch_slow = _is_slow(shot.time_s, base_hi)
 
-    # Step A — Channeling check
-    if ch_fast and shot.taste == Taste.BITTER:
-        return Decision(Direction.NONE, 0, ReasonCode.CHANNELING_SUSPECTED, Confidence.LOW, facts)
-    if ch_slow and shot.taste in (Taste.SOUR, Taste.WEAK):
-        return Decision(Direction.NONE, 0, ReasonCode.CHANNELING_SUSPECTED, Confidence.LOW, facts)
+    # Step A — Channeling check (requires taste)
+    if shot.taste is not None:
+        if ch_fast and shot.taste == Taste.BITTER:
+            return Decision(
+                Direction.NONE,
+                0,
+                ReasonCode.CHANNELING_SUSPECTED,
+                Confidence.LOW,
+                facts,
+            )
+        if ch_slow and shot.taste in (Taste.SOUR, Taste.WEAK):
+            return Decision(
+                Direction.NONE,
+                0,
+                ReasonCode.CHANNELING_SUSPECTED,
+                Confidence.LOW,
+                facts,
+            )
 
     fast = _is_fast(shot.time_s, t_lo)
     slow = _is_slow(shot.time_s, t_hi)
@@ -94,14 +108,14 @@ def recommend(shot: ShotInput, config: EngineConfig = _DEFAULT_CONFIG) -> Decisi
     if slow:
         return Decision(Direction.COARSER, MODERATE, ReasonCode.FLOW_SLOW, Confidence.MEDIUM, facts)
 
-    # Step C — In-window taste
+    # Step C — In-window taste (no taste provided = assume dialed in)
     notes: list[str] = []
     direction = Direction.NONE
     magnitude = 0.0
     confidence = Confidence.HIGH
     reason = ReasonCode.DIALED_IN
 
-    if shot.taste == Taste.BALANCED:
+    if shot.taste is None or shot.taste == Taste.BALANCED:
         pass
     elif shot.taste == Taste.SOUR:
         direction, magnitude, confidence, reason = (

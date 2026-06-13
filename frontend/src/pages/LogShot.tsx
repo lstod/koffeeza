@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { CheckCircle2, Circle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,6 +71,7 @@ export function LogShot() {
   const [recall, setRecall] = useState<RecallResponse | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -82,6 +83,7 @@ export function LogShot() {
       setBeans(b);
       setGrinders(g);
       setMachines(m);
+      setLoaded(true);
 
       try {
         const prefs = await fetchPreferences();
@@ -155,8 +157,8 @@ export function LogShot() {
     e.preventDefault();
     setError(null);
 
-    if (!beanId || !grinderId || !machineId || !taste) {
-      setError("Please select a bean, grinder, machine, and taste.");
+    if (!beanId || !grinderId || !machineId) {
+      setError("Please select a bean, grinder, and machine.");
       return;
     }
     if (!dose || !yieldG || !time || !grindSetting) {
@@ -184,6 +186,65 @@ export function LogShot() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  const needsSetup =
+    loaded && (!beans.length || !grinders.length || !machines.length);
+
+  if (!loaded) {
+    return (
+      <div className="flex min-h-[60svh] items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (needsSetup) {
+    return (
+      <div className="flex min-h-[60svh] flex-col items-center justify-center gap-6 p-6 text-center">
+        <h1 className="text-xl font-semibold tracking-tight">
+          Welcome to Koffeeza
+        </h1>
+        <p className="max-w-xs text-sm text-muted-foreground">
+          Before you can log a shot, set up your equipment.
+        </p>
+        <ul className="space-y-3 text-left text-sm">
+          <li className="flex items-center gap-2">
+            {beans.length ? (
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+            ) : (
+              <Circle className="h-5 w-5 text-muted-foreground" />
+            )}
+            <span className={beans.length ? "text-muted-foreground" : ""}>
+              Add a bean
+            </span>
+          </li>
+          <li className="flex items-center gap-2">
+            {grinders.length ? (
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+            ) : (
+              <Circle className="h-5 w-5 text-muted-foreground" />
+            )}
+            <span className={grinders.length ? "text-muted-foreground" : ""}>
+              Add a grinder
+            </span>
+          </li>
+          <li className="flex items-center gap-2">
+            {machines.length ? (
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+            ) : (
+              <Circle className="h-5 w-5 text-muted-foreground" />
+            )}
+            <span className={machines.length ? "text-muted-foreground" : ""}>
+              Add a machine
+            </span>
+          </li>
+        </ul>
+        <Button asChild className="h-12 w-full max-w-xs text-base">
+          <Link to="/setup">Go to Setup</Link>
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -306,7 +367,9 @@ export function LogShot() {
 
       {/* Taste buttons */}
       <div className="space-y-2">
-        <Label>Taste</Label>
+        <Label>
+          Taste <span className="text-muted-foreground">(optional)</span>
+        </Label>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
           {TASTE_OPTIONS.map((t) => (
             <Button
