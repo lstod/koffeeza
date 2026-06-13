@@ -1,3 +1,16 @@
+// ── User ────────────────────────────────────────────────────────────────────
+
+export interface UserResponse {
+  id: number;
+  name: string;
+  has_pin: boolean;
+}
+
+export interface UserLoginResponse {
+  user: UserResponse;
+  token: string;
+}
+
 // ── Enums ───────────────────────────────────────────────────────────────────
 
 export type Taste = "SOUR" | "BITTER" | "BALANCED" | "WEAK" | "ASTRINGENT";

@@ -224,3 +224,6 @@ frontend/dist/
 # SQLite databases
 *.db
 *.db-journal
+
+# Auth secret key
+.secret_key

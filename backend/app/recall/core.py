@@ -45,7 +45,9 @@ def _generic() -> RecallResult:
     )
 
 
-def recall(db: Session, bean_id: int, grinder_id: int, machine_id: int) -> RecallResult:
+def recall(
+    db: Session, bean_id: int, grinder_id: int, machine_id: int, user_id: int
+) -> RecallResult:
     """Tiered recall: return the best prior shot as a starting point.
 
     Tiers (first match wins):
@@ -58,6 +60,7 @@ def recall(db: Session, bean_id: int, grinder_id: int, machine_id: int) -> Recal
     base = (
         db.query(Shot)
         .filter(
+            Shot.user_id == user_id,
             Shot.bean_id == bean_id,
             Shot.grinder_id == grinder_id,
             Shot.machine_id == machine_id,

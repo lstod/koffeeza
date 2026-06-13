@@ -4,10 +4,12 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.auth import get_current_user
 from app.database import Base, get_db
-from app.main import app
 from app.enums import ScaleType
+from app.main import app
 from app.models import Bean, Grinder, Machine
+from app.models.user import User
 
 engine = create_engine(
     "sqlite:///:memory:",
@@ -38,7 +40,36 @@ def db():
 
 
 @pytest.fixture
-def client(db):
+def test_user(db):
+    user = User(name="Test User")
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@pytest.fixture
+def client(db, test_user):
+    def _override_get_db():
+        try:
+            yield db
+        finally:
+            pass
+
+    def _override_current_user():
+        return test_user
+
+    app.dependency_overrides[get_db] = _override_get_db
+    app.dependency_overrides[get_current_user] = _override_current_user
+    with TestClient(app) as c:
+        yield c
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def raw_client(db):
+    """Client with no auth override -- for testing auth directly."""
+
     def _override_get_db():
         try:
             yield db
@@ -52,8 +83,9 @@ def client(db):
 
 
 @pytest.fixture
-def create_bean(db):
+def create_bean(db, test_user):
     def _create(brand: str = "Onyx", product: str = "Monarch", **kwargs) -> Bean:
+        kwargs.setdefault("user_id", test_user.id)
         bean = Bean(brand=brand, product=product, **kwargs)
         db.add(bean)
         db.commit()
@@ -64,7 +96,7 @@ def create_bean(db):
 
 
 @pytest.fixture
-def create_grinder(db):
+def create_grinder(db, test_user):
     def _create(
         brand: str = "Eureka",
         model: str = "Mignon Specialita",
@@ -75,6 +107,7 @@ def create_grinder(db):
         unit_label: str = "numbers",
         **kwargs,
     ) -> Grinder:
+        kwargs.setdefault("user_id", test_user.id)
         grinder = Grinder(
             brand=brand,
             model=model,
@@ -94,8 +127,9 @@ def create_grinder(db):
 
 
 @pytest.fixture
-def create_machine(db):
+def create_machine(db, test_user):
     def _create(brand: str = "Breville", model: str = "Bambino Plus", **kwargs) -> Machine:
+        kwargs.setdefault("user_id", test_user.id)
         machine = Machine(brand=brand, model=model, **kwargs)
         db.add(machine)
         db.commit()

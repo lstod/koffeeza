@@ -189,15 +189,15 @@ class TestSeedProfiles:
         assert sette["min_native"] == 1.0
         assert sette["max_native"] == 31.0
 
-    def test_seed_grinders_inserts(self, db):
+    def test_seed_grinders_inserts(self, db, test_user):
         """seed_grinders() populates an empty table."""
-        count = seed_grinders(db)
+        count = seed_grinders(db, user_id=test_user.id)
         assert count == 5
 
-    def test_seed_grinders_idempotent(self, db):
+    def test_seed_grinders_idempotent(self, db, test_user):
         """Calling seed_grinders() twice inserts only once."""
-        seed_grinders(db)
-        count = seed_grinders(db)
+        seed_grinders(db, user_id=test_user.id)
+        count = seed_grinders(db, user_id=test_user.id)
         assert count == 0
 
 

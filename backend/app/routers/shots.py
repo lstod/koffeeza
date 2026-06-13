@@ -2,10 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.adapter import to_instruction
+from app.auth import get_current_user
 from app.database import get_db
 from app.engine import ShotInput, recommend
 from app.models import Bean, Grinder, Machine, Shot
 from app.models.preference import Preference
+from app.models.user import User
 from app.rationale import render_rationale
 from app.schemas import ShotCreate, ShotResponse, ShotSuggestionResponse
 
@@ -13,8 +15,16 @@ router = APIRouter(prefix="/shots", tags=["shots"])
 
 
 @router.get("", response_model=list[ShotResponse])
-def list_shots(bean_id: int | None = None, db: Session = Depends(get_db)):
-    query = db.query(Shot).order_by(Shot.created_at.desc(), Shot.id.desc())
+def list_shots(
+    bean_id: int | None = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    query = (
+        db.query(Shot)
+        .filter(Shot.user_id == current_user.id)
+        .order_by(Shot.created_at.desc(), Shot.id.desc())
+    )
     if bean_id is not None:
         query = query.filter(Shot.bean_id == bean_id)
     return query.all()
@@ -25,17 +35,21 @@ def list_shots(bean_id: int | None = None, db: Session = Depends(get_db)):
     response_model=ShotSuggestionResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def create_shot(payload: ShotCreate, db: Session = Depends(get_db)):
+def create_shot(
+    payload: ShotCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     bean = db.get(Bean, payload.bean_id)
-    if not bean:
+    if not bean or bean.user_id != current_user.id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"Bean {payload.bean_id} not found")
 
     grinder = db.get(Grinder, payload.grinder_id)
-    if not grinder:
+    if not grinder or grinder.user_id != current_user.id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"Grinder {payload.grinder_id} not found")
 
     machine = db.get(Machine, payload.machine_id)
-    if not machine:
+    if not machine or machine.user_id != current_user.id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"Machine {payload.machine_id} not found")
 
     try:
@@ -60,14 +74,21 @@ def create_shot(payload: ShotCreate, db: Session = Depends(get_db)):
 
     shot = Shot(
         **payload.model_dump(),
+        user_id=current_user.id,
         reason_code=decision.reason_code,
     )
     db.add(shot)
     db.flush()
 
-    pref = db.get(Preference, 1)
+    pref = (
+        db.query(Preference).filter(Preference.user_id == current_user.id).first()
+    )
     if pref is None:
-        pref = Preference(id=1, grinder_id=payload.grinder_id, machine_id=payload.machine_id)
+        pref = Preference(
+            user_id=current_user.id,
+            grinder_id=payload.grinder_id,
+            machine_id=payload.machine_id,
+        )
         db.add(pref)
     else:
         pref.grinder_id = payload.grinder_id

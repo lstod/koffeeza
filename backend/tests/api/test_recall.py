@@ -4,6 +4,7 @@ from app.models import Shot
 
 def _post_shot(db, bean, grinder, machine, *, reason_code=ReasonCode.TASTE_SOUR, **overrides):
     defaults = dict(
+        user_id=bean.user_id,
         bean_id=bean.id,
         grinder_id=grinder.id,
         machine_id=machine.id,

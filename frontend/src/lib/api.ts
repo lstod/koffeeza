@@ -10,20 +10,79 @@ import type {
   ShotCreate,
   ShotResponse,
   ShotSuggestionResponse,
+  UserLoginResponse,
+  UserResponse,
 } from "./types";
 
 const BASE = "/api";
+const TOKEN_KEY = "koffeeza_token";
+
+let onUnauthorized: (() => void) | null = null;
+
+export function setOnUnauthorized(cb: () => void) {
+  onUnauthorized = cb;
+}
+
+function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token: string) {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearToken() {
+  localStorage.removeItem(TOKEN_KEY);
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...init,
-  });
+  const token = getToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${BASE}${path}`, { headers, ...init });
+
+  if (res.status === 401 || res.status === 403) {
+    clearToken();
+    onUnauthorized?.();
+    throw new Error("Unauthorized");
+  }
+
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     throw new Error(body || `Request failed: ${res.status}`);
   }
   return res.json() as Promise<T>;
+}
+
+// ── Users (no auth required) ────────────────────────────────────────────────
+
+export function fetchUsers(): Promise<UserResponse[]> {
+  return request("/users");
+}
+
+export function createUser(
+  name: string,
+  pin?: string,
+): Promise<UserLoginResponse> {
+  return request("/users", {
+    method: "POST",
+    body: JSON.stringify({ name, pin: pin || null }),
+  });
+}
+
+export function loginUser(
+  userId: number,
+  pin?: string,
+): Promise<UserLoginResponse> {
+  return request(`/users/${userId}/login`, {
+    method: "POST",
+    body: JSON.stringify({ pin: pin || null }),
+  });
 }
 
 // ── Beans ───────────────────────────────────────────────────────────────────
