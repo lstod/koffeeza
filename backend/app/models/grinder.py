@@ -1,15 +1,8 @@
-import enum
-
 from sqlalchemy import Boolean, Float, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
-
-
-class ScaleType(enum.StrEnum):
-    STEPPED = "STEPPED"
-    CLICKS = "CLICKS"
-    STEPLESS = "STEPLESS"
+from app.enums import ScaleType
 
 
 class Grinder(Base):

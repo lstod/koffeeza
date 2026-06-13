@@ -1,8 +1,8 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
 
+from app.enums import Taste
 from app.models import Bean, Shot
-from app.models.shot import Taste
 
 
 def test_bean_unique_constraint(db, create_bean):
