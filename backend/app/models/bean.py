@@ -6,9 +6,7 @@ from app.database import Base
 
 class Bean(Base):
     __tablename__ = "beans"
-    __table_args__ = (
-        UniqueConstraint("user_id", "brand", "product", name="uq_bean_identity"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "brand", "product", name="uq_bean_identity"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))

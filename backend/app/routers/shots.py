@@ -80,9 +80,7 @@ def create_shot(
     db.add(shot)
     db.flush()
 
-    pref = (
-        db.query(Preference).filter(Preference.user_id == current_user.id).first()
-    )
+    pref = db.query(Preference).filter(Preference.user_id == current_user.id).first()
     if pref is None:
         pref = Preference(
             user_id=current_user.id,
