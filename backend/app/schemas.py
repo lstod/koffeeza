@@ -2,8 +2,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models.grinder import ScaleType
-from app.models.shot import Intensity, Taste
+from app.enums import Intensity, ScaleType, Taste
 
 # ── Bean ─────────────────────────────────────────────────────────────────────
 

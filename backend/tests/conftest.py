@@ -6,8 +6,8 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import Base, get_db
 from app.main import app
+from app.enums import ScaleType
 from app.models import Bean, Grinder, Machine
-from app.models.grinder import ScaleType
 
 engine = create_engine(
     "sqlite:///:memory:",
