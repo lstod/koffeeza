@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from app.config import ANTHROPIC_API_KEY, LLM_RATIONALE_TIMEOUT
+from app.config import ANTHROPIC_API_KEY, LLM_RATIONALE_MODEL, LLM_RATIONALE_TIMEOUT
 
 log = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ def generate_llm_rationale(
     )
 
     response = client.messages.create(
-        model="claude-haiku-4-20250414",
+        model=LLM_RATIONALE_MODEL,
         max_tokens=256,
         system=_SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_message}],
