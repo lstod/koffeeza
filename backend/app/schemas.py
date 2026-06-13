@@ -151,6 +151,7 @@ class ShotSuggestionResponse(BaseModel):
     confidence: str
     instruction: str
     rationale: str
+    rationale_source: str = "template"
 
 
 # ── Recall ──────────────────────────────────────────────────────────────────

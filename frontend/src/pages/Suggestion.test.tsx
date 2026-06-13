@@ -26,6 +26,7 @@ const baseSuggestion: ShotSuggestionResponse = {
   instruction: "Grind 1 step finer: 12 → 11",
   rationale:
     "Your shot ran in 22s, a bit faster than the 25-32s window. Grind a touch finer to slow extraction.",
+  rationale_source: "template",
 };
 
 function renderSuggestion(suggestion?: ShotSuggestionResponse) {

@@ -132,6 +132,7 @@ export interface ShotSuggestionResponse {
   confidence: string;
   instruction: string;
   rationale: string;
+  rationale_source: string;
 }
 
 // ── Recall ──────────────────────────────────────────────────────────────────
