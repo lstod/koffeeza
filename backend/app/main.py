@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from alembic import command
-from app.routers import beans, grinders, machines
+from app.routers import beans, grinders, machines, shots
 
 
 @asynccontextmanager
@@ -29,6 +29,7 @@ app.add_middleware(
 app.include_router(beans.router)
 app.include_router(grinders.router)
 app.include_router(machines.router)
+app.include_router(shots.router)
 
 
 @app.get("/health")

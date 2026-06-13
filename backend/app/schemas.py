@@ -87,7 +87,6 @@ class ShotCreate(BaseModel):
     time_s: float
     taste: Taste
     intensity: Intensity | None = None
-    reason_code: str
     roast_date: date | None = None
 
 
@@ -107,3 +106,12 @@ class ShotResponse(BaseModel):
     reason_code: str
     roast_date: date | None
     created_at: datetime
+
+
+class ShotSuggestionResponse(BaseModel):
+    shot: ShotResponse
+    direction: str | None
+    magnitude_normalized: float
+    confidence: str
+    instruction: str
+    rationale: str
