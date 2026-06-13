@@ -1,7 +1,22 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
+from alembic.config import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="Koffeeza", version="0.1.0")
+from alembic import command
+from app.routers import beans, grinders, machines
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    cfg = Config("alembic.ini")
+    command.upgrade(cfg, "head")
+    yield
+
+
+app = FastAPI(title="Koffeeza", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -10,6 +25,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(beans.router)
+app.include_router(grinders.router)
+app.include_router(machines.router)
 
 
 @app.get("/health")
