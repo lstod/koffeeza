@@ -1,4 +1,3 @@
-import { fileURLToPath, URL as NodeURL } from "node:url";
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -6,9 +5,7 @@ import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   resolve: {
-    alias: {
-      "@": fileURLToPath(new NodeURL("./src", import.meta.url)),
-    },
+    tsconfigPaths: true,
   },
   plugins: [
     react(),
