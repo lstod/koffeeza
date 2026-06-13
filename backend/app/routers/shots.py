@@ -5,6 +5,7 @@ from app.adapter import to_instruction
 from app.database import get_db
 from app.engine import ShotInput, recommend
 from app.models import Bean, Grinder, Machine, Shot
+from app.models.preference import Preference
 from app.rationale import render_rationale
 from app.schemas import ShotCreate, ShotResponse, ShotSuggestionResponse
 
@@ -62,6 +63,16 @@ def create_shot(payload: ShotCreate, db: Session = Depends(get_db)):
         reason_code=decision.reason_code,
     )
     db.add(shot)
+    db.flush()
+
+    pref = db.get(Preference, 1)
+    if pref is None:
+        pref = Preference(id=1, grinder_id=payload.grinder_id, machine_id=payload.machine_id)
+        db.add(pref)
+    else:
+        pref.grinder_id = payload.grinder_id
+        pref.machine_id = payload.machine_id
+
     db.commit()
     db.refresh(shot)
 
