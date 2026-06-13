@@ -1,11 +1,20 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Layout } from "@/components/Layout";
+import { LogShot } from "@/pages/LogShot";
+import { Suggestion } from "@/pages/Suggestion";
+import { Setup } from "@/pages/Setup";
+
 function App() {
   return (
-    <div className="flex min-h-svh items-center justify-center bg-neutral-950 text-neutral-50">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight">Koffeeza</h1>
-        <p className="mt-2 text-neutral-400">Espresso dial-in tool</p>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index element={<LogShot />} />
+          <Route path="suggestion" element={<Suggestion />} />
+          <Route path="setup" element={<Setup />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 
