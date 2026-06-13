@@ -165,6 +165,67 @@ function BeansTab() {
   );
 }
 
+// ── Grinder Presets ────────────────────────────────────────────────────────
+
+interface GrinderPreset {
+  id: string;
+  label: string;
+  brand: string;
+  model: string;
+  scale_type: ScaleType;
+  step_native: string;
+  finer_is_lower: boolean;
+  snap: string;
+  unit_label: string;
+}
+
+const GRINDER_PRESETS: GrinderPreset[] = [
+  {
+    id: "niche-zero",
+    label: "Niche Zero",
+    brand: "Niche",
+    model: "Zero",
+    scale_type: "STEPLESS",
+    step_native: "8",
+    finer_is_lower: true,
+    snap: "5",
+    unit_label: "°",
+  },
+  {
+    id: "comandante-c40",
+    label: "Comandante C40",
+    brand: "Comandante",
+    model: "C40",
+    scale_type: "CLICKS",
+    step_native: "2",
+    finer_is_lower: true,
+    snap: "1",
+    unit_label: "clicks",
+  },
+  {
+    id: "baratza-encore",
+    label: "Baratza Encore",
+    brand: "Baratza",
+    model: "Encore",
+    scale_type: "STEPPED",
+    step_native: "1.5",
+    finer_is_lower: true,
+    snap: "1",
+    unit_label: "",
+  },
+  {
+    id: "generic",
+    label: "Generic Stepped",
+    brand: "",
+    model: "",
+    scale_type: "STEPPED",
+    step_native: "1",
+    finer_is_lower: true,
+    snap: "1",
+    unit_label: "",
+  },
+];
+
 // ── Grinders Tab ───────────────────────────────────────────────────────────
 
 function GrindersTab() {
@@ -245,10 +306,39 @@ function GrindersTab() {
             <DialogHeader>
               <DialogTitle>Add Grinder</DialogTitle>
               <DialogDescription>
-                Configure your grinder and its adapter profile.
+                Pick a preset to auto-fill, or enter details manually.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Preset</Label>
+                <Select
+                  value="custom"
+                  onValueChange={(v) => {
+                    const preset = GRINDER_PRESETS.find((p) => p.id === v);
+                    if (!preset) return;
+                    setBrand(preset.brand);
+                    setModel(preset.model);
+                    setScaleType(preset.scale_type);
+                    setStepNative(preset.step_native);
+                    setFinerIsLower(preset.finer_is_lower);
+                    setSnap(preset.snap);
+                    setUnitLabel(preset.unit_label);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="custom">Custom</SelectItem>
+                    {GRINDER_PRESETS.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label>Brand</Label>
                 <Input
