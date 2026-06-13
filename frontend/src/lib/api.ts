@@ -8,6 +8,7 @@ import type {
   PreferenceResponse,
   RecallResponse,
   ShotCreate,
+  ShotResponse,
   ShotSuggestionResponse,
 } from "./types";
 
@@ -71,6 +72,11 @@ export function fetchRecall(
 }
 
 // ── Shots ───────────────────────────────────────────────────────────────────
+
+export function fetchShots(beanId?: number): Promise<ShotResponse[]> {
+  const params = beanId != null ? `?bean_id=${beanId}` : "";
+  return request(`/shots${params}`);
+}
 
 export function createShot(
   data: ShotCreate,

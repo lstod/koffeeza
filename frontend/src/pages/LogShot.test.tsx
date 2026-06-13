@@ -103,7 +103,7 @@ describe("LogShot", () => {
     await renderLogShot();
     fireEvent.click(screen.getByText("Log Shot"));
     expect(
-      screen.getByText("Please select a bean, grinder, machine, and taste."),
+      screen.getByText("Please select a bean, grinder, and machine."),
     ).toBeInTheDocument();
   });
 

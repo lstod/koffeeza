@@ -18,7 +18,7 @@ class Shot(Base):
     dose_g: Mapped[float] = mapped_column(Float)
     yield_g: Mapped[float] = mapped_column(Float)
     time_s: Mapped[float] = mapped_column(Float)
-    taste: Mapped[Taste] = mapped_column(String(20))
+    taste: Mapped[Taste | None] = mapped_column(String(20), default=None)
     intensity: Mapped[Intensity | None] = mapped_column(String(10), default=None)
     reason_code: Mapped[str] = mapped_column(String(50))
     roast_date: Mapped[date | None] = mapped_column(Date, default=None)

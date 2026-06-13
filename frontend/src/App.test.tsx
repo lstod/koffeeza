@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import App from "./App";
 
@@ -12,16 +12,21 @@ vi.mock("@/lib/api", () => ({
 }));
 
 describe("App", () => {
-  it("renders the LogShot page at /", () => {
-    render(<App />);
-    expect(screen.getByText("Log a Shot")).toBeInTheDocument();
+  it("renders onboarding when no equipment is configured", async () => {
+    await act(async () => {
+      render(<App />);
+    });
+    expect(screen.getByText("Welcome to Koffeeza")).toBeInTheDocument();
   });
 
-  it("renders the bottom navigation bar", () => {
-    render(<App />);
+  it("renders the bottom navigation bar", async () => {
+    await act(async () => {
+      render(<App />);
+    });
     const nav = screen.getByRole("navigation");
     expect(nav).toBeInTheDocument();
     expect(nav).toHaveTextContent("Log");
+    expect(nav).toHaveTextContent("History");
     expect(nav).toHaveTextContent("Setup");
   });
 });

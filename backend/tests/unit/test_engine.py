@@ -209,6 +209,64 @@ def test_facts_populated():
 
 
 # ---------------------------------------------------------------------------
+# Taste=None (optional taste)
+# ---------------------------------------------------------------------------
+
+def test_no_taste_in_window_is_dialed_in():
+    """Without taste, an in-window shot is assumed dialed in."""
+    shot = ShotInput(dose_g=18, yield_g=36, time_s=28)
+    d = recommend(shot)
+    assert d.reason_code == ReasonCode.DIALED_IN
+    assert d.direction == Direction.NONE
+    assert d.magnitude_normalized == 0
+
+
+def test_no_taste_flow_too_fast():
+    """Flow faults still fire without taste."""
+    shot = ShotInput(dose_g=18, yield_g=36, time_s=18)
+    d = recommend(shot)
+    assert d.reason_code == ReasonCode.FLOW_TOO_FAST
+    assert d.direction == Direction.FINER
+    assert d.magnitude_normalized == 2.5
+
+
+def test_no_taste_flow_fast():
+    shot = ShotInput(dose_g=18, yield_g=36, time_s=21)
+    d = recommend(shot)
+    assert d.reason_code == ReasonCode.FLOW_FAST
+    assert d.direction == Direction.FINER
+
+
+def test_no_taste_flow_slow():
+    shot = ShotInput(dose_g=18, yield_g=36, time_s=35)
+    d = recommend(shot)
+    assert d.reason_code == ReasonCode.FLOW_SLOW
+    assert d.direction == Direction.COARSER
+
+
+def test_no_taste_flow_too_slow():
+    shot = ShotInput(dose_g=18, yield_g=36, time_s=45)
+    d = recommend(shot)
+    assert d.reason_code == ReasonCode.FLOW_TOO_SLOW
+    assert d.direction == Direction.COARSER
+    assert d.magnitude_normalized == 2.5
+
+
+def test_no_taste_skips_channeling():
+    """Without taste, channeling can't be detected (needs contradictory taste)."""
+    shot = ShotInput(dose_g=18, yield_g=36, time_s=22)
+    d = recommend(shot)
+    assert d.reason_code == ReasonCode.FLOW_FAST
+    assert d.reason_code != ReasonCode.CHANNELING_SUSPECTED
+
+
+def test_no_taste_facts_has_none():
+    shot = ShotInput(dose_g=18, yield_g=36, time_s=28)
+    d = recommend(shot)
+    assert d.facts["taste"] is None
+
+
+# ---------------------------------------------------------------------------
 # Purity check — engine must not depend on DB, FastAPI, or external services
 # ---------------------------------------------------------------------------
 

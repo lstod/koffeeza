@@ -1,9 +1,10 @@
 import { NavLink } from "react-router-dom";
-import { Coffee, Settings } from "lucide-react";
+import { ClipboardList, Coffee, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
   { to: "/", label: "Log", icon: Coffee },
+  { to: "/history", label: "History", icon: ClipboardList },
   { to: "/setup", label: "Setup", icon: Settings },
 ] as const;
 
