@@ -95,6 +95,14 @@ export function createBean(data: BeanCreate): Promise<BeanResponse> {
   return request("/beans", { method: "POST", body: JSON.stringify(data) });
 }
 
+export function updateBean(id: number, data: BeanCreate): Promise<BeanResponse> {
+  return request(`/beans/${id}`, { method: "PUT", body: JSON.stringify(data) });
+}
+
+export function deleteBean(id: number): Promise<{ deleted_shots: number }> {
+  return request(`/beans/${id}`, { method: "DELETE" });
+}
+
 // ── Grinders ────────────────────────────────────────────────────────────────
 
 export function fetchGrinders(): Promise<GrinderResponse[]> {
@@ -105,6 +113,14 @@ export function createGrinder(data: GrinderCreate): Promise<GrinderResponse> {
   return request("/grinders", { method: "POST", body: JSON.stringify(data) });
 }
 
+export function updateGrinder(id: number, data: GrinderCreate): Promise<GrinderResponse> {
+  return request(`/grinders/${id}`, { method: "PUT", body: JSON.stringify(data) });
+}
+
+export function deleteGrinder(id: number): Promise<{ deleted_shots: number }> {
+  return request(`/grinders/${id}`, { method: "DELETE" });
+}
+
 // ── Machines ────────────────────────────────────────────────────────────────
 
 export function fetchMachines(): Promise<MachineResponse[]> {
@@ -113,6 +129,14 @@ export function fetchMachines(): Promise<MachineResponse[]> {
 
 export function createMachine(data: MachineCreate): Promise<MachineResponse> {
   return request("/machines", { method: "POST", body: JSON.stringify(data) });
+}
+
+export function updateMachine(id: number, data: MachineCreate): Promise<MachineResponse> {
+  return request(`/machines/${id}`, { method: "PUT", body: JSON.stringify(data) });
+}
+
+export function deleteMachine(id: number): Promise<{ deleted_shots: number }> {
+  return request(`/machines/${id}`, { method: "DELETE" });
 }
 
 // ── Recall ──────────────────────────────────────────────────────────────────

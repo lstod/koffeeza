@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,14 +25,30 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   createBean,
   createGrinder,
   createMachine,
+  deleteBean,
+  deleteGrinder,
+  deleteMachine,
   fetchBeans,
   fetchGrinders,
   fetchMachines,
+  updateBean,
+  updateGrinder,
+  updateMachine,
 } from "@/lib/api";
 import type {
   BeanResponse,
@@ -48,10 +64,13 @@ function BeansTab() {
   const [beans, setBeans] = useState<BeanResponse[]>([]);
   const [loadKey, setLoadKey] = useState(0);
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<BeanResponse | null>(null);
+
   const [brand, setBrand] = useState("");
   const [product, setProduct] = useState("");
   const [notes, setNotes] = useState("");
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,18 +82,36 @@ function BeansTab() {
     };
   }, [loadKey]);
 
+  function resetForm() {
+    setBrand("");
+    setProduct("");
+    setNotes("");
+    setEditingId(null);
+  }
+
+  function openEdit(b: BeanResponse) {
+    setBrand(b.brand);
+    setProduct(b.product);
+    setNotes(b.notes ?? "");
+    setEditingId(b.id);
+    setOpen(true);
+  }
+
   async function handleSave() {
     if (!brand.trim() || !product.trim()) return;
     setSaving(true);
     try {
-      await createBean({
+      const data = {
         brand: brand.trim(),
         product: product.trim(),
         notes: notes.trim() || null,
-      });
-      setBrand("");
-      setProduct("");
-      setNotes("");
+      };
+      if (editingId) {
+        await updateBean(editingId, data);
+      } else {
+        await createBean(data);
+      }
+      resetForm();
       setOpen(false);
       setLoadKey((k) => k + 1);
     } finally {
@@ -82,11 +119,24 @@ function BeansTab() {
     }
   }
 
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    await deleteBean(deleteTarget.id);
+    setDeleteTarget(null);
+    setLoadKey((k) => k + 1);
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">Beans</h2>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog
+          open={open}
+          onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) resetForm();
+          }}
+        >
           <DialogTrigger asChild>
             <Button size="sm">
               <Plus className="mr-1 h-4 w-4" /> Add Bean
@@ -94,9 +144,11 @@ function BeansTab() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Bean</DialogTitle>
+              <DialogTitle>{editingId ? "Edit Bean" : "Add Bean"}</DialogTitle>
               <DialogDescription>
-                Add a new coffee bean to your collection.
+                {editingId
+                  ? "Update this bean's details."
+                  : "Add a new coffee bean to your collection."}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -132,7 +184,7 @@ function BeansTab() {
                 disabled={saving || !brand.trim() || !product.trim()}
                 className="w-full"
               >
-                {saving ? "Saving…" : "Save"}
+                {saving ? "Saving…" : editingId ? "Update" : "Save"}
               </Button>
             </div>
           </DialogContent>
@@ -147,20 +199,66 @@ function BeansTab() {
         <div className="space-y-2">
           {beans.map((b) => (
             <Card key={b.id}>
-              <CardHeader className="p-4">
-                <CardTitle className="text-base">
-                  {b.brand} — {b.product}
-                </CardTitle>
-                {b.notes && (
-                  <CardDescription className="text-xs">
-                    {b.notes}
-                  </CardDescription>
-                )}
+              <CardHeader className="flex flex-row items-start justify-between p-4">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-base">
+                    {b.brand} — {b.product}
+                  </CardTitle>
+                  {b.notes && (
+                    <CardDescription className="text-xs">
+                      {b.notes}
+                    </CardDescription>
+                  )}
+                </div>
+                <div className="ml-2 flex shrink-0 gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => openEdit(b)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    onClick={() => setDeleteTarget(b)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardHeader>
             </Card>
           ))}
         </div>
       )}
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(v) => {
+          if (!v) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete bean?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete{" "}
+              <span className="font-medium text-foreground">
+                {deleteTarget?.brand} — {deleteTarget?.product}
+              </span>{" "}
+              and all shots logged with this bean. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -233,6 +331,10 @@ function GrindersTab() {
   const [loadKey, setLoadKey] = useState(0);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<GrinderResponse | null>(
+    null,
+  );
 
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
@@ -266,13 +368,29 @@ function GrindersTab() {
     setMinNative("");
     setMaxNative("");
     setUnitLabel("");
+    setEditingId(null);
+  }
+
+  function openEdit(g: GrinderResponse) {
+    setBrand(g.brand);
+    setModel(g.model);
+    setLabel(g.label ?? "");
+    setScaleType(g.scale_type);
+    setStepNative(String(g.step_native));
+    setFinerIsLower(g.finer_is_lower);
+    setSnap(String(g.snap));
+    setMinNative(g.min_native != null ? String(g.min_native) : "");
+    setMaxNative(g.max_native != null ? String(g.max_native) : "");
+    setUnitLabel(g.unit_label);
+    setEditingId(g.id);
+    setOpen(true);
   }
 
   async function handleSave() {
     if (!brand.trim() || !model.trim()) return;
     setSaving(true);
     try {
-      await createGrinder({
+      const data = {
         brand: brand.trim(),
         model: model.trim(),
         label: label.trim() || null,
@@ -283,7 +401,12 @@ function GrindersTab() {
         min_native: minNative ? Number(minNative) : null,
         max_native: maxNative ? Number(maxNative) : null,
         unit_label: unitLabel,
-      });
+      };
+      if (editingId) {
+        await updateGrinder(editingId, data);
+      } else {
+        await createGrinder(data);
+      }
       resetForm();
       setOpen(false);
       setLoadKey((k) => k + 1);
@@ -292,11 +415,24 @@ function GrindersTab() {
     }
   }
 
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    await deleteGrinder(deleteTarget.id);
+    setDeleteTarget(null);
+    setLoadKey((k) => k + 1);
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">Grinders</h2>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog
+          open={open}
+          onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) resetForm();
+          }}
+        >
           <DialogTrigger asChild>
             <Button size="sm">
               <Plus className="mr-1 h-4 w-4" /> Add Grinder
@@ -304,41 +440,47 @@ function GrindersTab() {
           </DialogTrigger>
           <DialogContent className="max-h-[85svh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Add Grinder</DialogTitle>
+              <DialogTitle>
+                {editingId ? "Edit Grinder" : "Add Grinder"}
+              </DialogTitle>
               <DialogDescription>
-                Pick a preset to auto-fill, or enter details manually.
+                {editingId
+                  ? "Update this grinder's details."
+                  : "Pick a preset to auto-fill, or enter details manually."}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Preset</Label>
-                <Select
-                  value="custom"
-                  onValueChange={(v) => {
-                    const preset = GRINDER_PRESETS.find((p) => p.id === v);
-                    if (!preset) return;
-                    setBrand(preset.brand);
-                    setModel(preset.model);
-                    setScaleType(preset.scale_type);
-                    setStepNative(preset.step_native);
-                    setFinerIsLower(preset.finer_is_lower);
-                    setSnap(preset.snap);
-                    setUnitLabel(preset.unit_label);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="custom">Custom</SelectItem>
-                    {GRINDER_PRESETS.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {!editingId && (
+                <div className="space-y-2">
+                  <Label>Preset</Label>
+                  <Select
+                    value="custom"
+                    onValueChange={(v) => {
+                      const preset = GRINDER_PRESETS.find((p) => p.id === v);
+                      if (!preset) return;
+                      setBrand(preset.brand);
+                      setModel(preset.model);
+                      setScaleType(preset.scale_type);
+                      setStepNative(preset.step_native);
+                      setFinerIsLower(preset.finer_is_lower);
+                      setSnap(preset.snap);
+                      setUnitLabel(preset.unit_label);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="custom">Custom</SelectItem>
+                      {GRINDER_PRESETS.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Brand</Label>
                 <Input
@@ -463,7 +605,7 @@ function GrindersTab() {
                 disabled={saving || !brand.trim() || !model.trim()}
                 className="w-full"
               >
-                {saving ? "Saving…" : "Save"}
+                {saving ? "Saving…" : editingId ? "Update" : "Save"}
               </Button>
             </div>
           </DialogContent>
@@ -478,20 +620,67 @@ function GrindersTab() {
         <div className="space-y-2">
           {grinders.map((g) => (
             <Card key={g.id}>
-              <CardHeader className="p-4">
-                <CardTitle className="text-base">
-                  {g.brand} {g.model}
-                  {g.label ? ` (${g.label})` : ""}
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  {g.scale_type} · step {g.step_native}
-                  {g.unit_label ? ` ${g.unit_label}` : ""} · snap {g.snap}
-                </CardDescription>
+              <CardHeader className="flex flex-row items-start justify-between p-4">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-base">
+                    {g.brand} {g.model}
+                    {g.label ? ` (${g.label})` : ""}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    {g.scale_type} · step {g.step_native}
+                    {g.unit_label ? ` ${g.unit_label}` : ""} · snap {g.snap}
+                  </CardDescription>
+                </div>
+                <div className="ml-2 flex shrink-0 gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => openEdit(g)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    onClick={() => setDeleteTarget(g)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardHeader>
             </Card>
           ))}
         </div>
       )}
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(v) => {
+          if (!v) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete grinder?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete{" "}
+              <span className="font-medium text-foreground">
+                {deleteTarget?.brand} {deleteTarget?.model}
+              </span>{" "}
+              and all shots logged with this grinder. This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -503,6 +692,10 @@ function MachinesTab() {
   const [loadKey, setLoadKey] = useState(0);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MachineResponse | null>(
+    null,
+  );
 
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
@@ -519,20 +712,39 @@ function MachinesTab() {
     };
   }, [loadKey]);
 
+  function resetForm() {
+    setBrand("");
+    setModel("");
+    setLabel("");
+    setNotes("");
+    setEditingId(null);
+  }
+
+  function openEdit(m: MachineResponse) {
+    setBrand(m.brand);
+    setModel(m.model);
+    setLabel(m.label ?? "");
+    setNotes(m.notes ?? "");
+    setEditingId(m.id);
+    setOpen(true);
+  }
+
   async function handleSave() {
     if (!brand.trim() || !model.trim()) return;
     setSaving(true);
     try {
-      await createMachine({
+      const data = {
         brand: brand.trim(),
         model: model.trim(),
         label: label.trim() || null,
         notes: notes.trim() || null,
-      });
-      setBrand("");
-      setModel("");
-      setLabel("");
-      setNotes("");
+      };
+      if (editingId) {
+        await updateMachine(editingId, data);
+      } else {
+        await createMachine(data);
+      }
+      resetForm();
       setOpen(false);
       setLoadKey((k) => k + 1);
     } finally {
@@ -540,11 +752,24 @@ function MachinesTab() {
     }
   }
 
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    await deleteMachine(deleteTarget.id);
+    setDeleteTarget(null);
+    setLoadKey((k) => k + 1);
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">Machines</h2>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog
+          open={open}
+          onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) resetForm();
+          }}
+        >
           <DialogTrigger asChild>
             <Button size="sm">
               <Plus className="mr-1 h-4 w-4" /> Add Machine
@@ -552,9 +777,13 @@ function MachinesTab() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Machine</DialogTitle>
+              <DialogTitle>
+                {editingId ? "Edit Machine" : "Add Machine"}
+              </DialogTitle>
               <DialogDescription>
-                Add a new espresso machine.
+                {editingId
+                  ? "Update this machine's details."
+                  : "Add a new espresso machine."}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -601,7 +830,7 @@ function MachinesTab() {
                 disabled={saving || !brand.trim() || !model.trim()}
                 className="w-full"
               >
-                {saving ? "Saving…" : "Save"}
+                {saving ? "Saving…" : editingId ? "Update" : "Save"}
               </Button>
             </div>
           </DialogContent>
@@ -616,21 +845,68 @@ function MachinesTab() {
         <div className="space-y-2">
           {machines.map((m) => (
             <Card key={m.id}>
-              <CardHeader className="p-4">
-                <CardTitle className="text-base">
-                  {m.brand} {m.model}
-                  {m.label ? ` (${m.label})` : ""}
-                </CardTitle>
-                {m.notes && (
-                  <CardDescription className="text-xs">
-                    {m.notes}
-                  </CardDescription>
-                )}
+              <CardHeader className="flex flex-row items-start justify-between p-4">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-base">
+                    {m.brand} {m.model}
+                    {m.label ? ` (${m.label})` : ""}
+                  </CardTitle>
+                  {m.notes && (
+                    <CardDescription className="text-xs">
+                      {m.notes}
+                    </CardDescription>
+                  )}
+                </div>
+                <div className="ml-2 flex shrink-0 gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => openEdit(m)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    onClick={() => setDeleteTarget(m)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardHeader>
             </Card>
           ))}
         </div>
       )}
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(v) => {
+          if (!v) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete machine?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete{" "}
+              <span className="font-medium text-foreground">
+                {deleteTarget?.brand} {deleteTarget?.model}
+              </span>{" "}
+              and all shots logged with this machine. This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
