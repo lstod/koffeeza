@@ -1,0 +1,46 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ghcr.io/${{ github.repository }}/backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository }}/frontend
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:latest
+            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:latest
+            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+
+      # Placeholder: add deployment steps here (e.g. SSH deploy, cloud provider CLI)
+      # - name: Deploy to server
+      #   run: echo "Deploy step — configure for your infrastructure"
