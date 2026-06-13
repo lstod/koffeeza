@@ -1,11 +1,17 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 export default defineConfig({
   resolve: {
-    tsconfigPaths: true,
+    alias: {
+      "@": path.resolve(__dirname, "src"),
+    },
   },
   plugins: [
     react(),
