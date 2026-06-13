@@ -1,0 +1,20 @@
+services:
+  backend:
+    image: ghcr.io/${GITHUB_REPO}/backend:latest
+    restart: unless-stopped
+    expose:
+      - "8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:///./data/koffeeza.db
+    env_file:
+      - .env
+
+  frontend:
+    image: ghcr.io/${GITHUB_REPO}/frontend:latest
+    restart: unless-stopped
+    expose:
+      - "3000"
+    depends_on:
+      - backend
