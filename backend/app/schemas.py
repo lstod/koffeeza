@@ -115,3 +115,31 @@ class ShotSuggestionResponse(BaseModel):
     confidence: str
     instruction: str
     rationale: str
+
+
+# ── Recall ──────────────────────────────────────────────────────────────────
+
+
+class RecallResponse(BaseModel):
+    confidence_label: str
+    source_tier: int
+    grind_setting_native: str | None
+    dose_g: float
+    yield_g: float
+    time_s: float
+    shot_id: int | None
+
+
+# ── Preferences ─────────────────────────────────────────────────────────────
+
+
+class PreferenceUpdate(BaseModel):
+    grinder_id: int | None = None
+    machine_id: int | None = None
+
+
+class PreferenceResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    grinder_id: int | None
+    machine_id: int | None
