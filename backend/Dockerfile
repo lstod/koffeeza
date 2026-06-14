@@ -3,11 +3,15 @@ FROM python:3.12-slim
 WORKDIR /app
 
 COPY pyproject.toml .
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir ".[llm]"
 
 COPY app/ app/
 COPY alembic.ini .
 COPY alembic/ alembic/
+
+RUN adduser --disabled-password --no-create-home appuser
+RUN mkdir -p /app/data && chown appuser:appuser /app/data
+USER appuser
 
 EXPOSE 8000
 

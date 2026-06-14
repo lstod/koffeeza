@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CheckCircle2, Circle, Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -213,38 +213,23 @@ export function LogShot() {
         <p className="max-w-xs text-sm text-muted-foreground">
           Before you can log a shot, set up your equipment.
         </p>
-        <ul className="space-y-3 text-left text-sm">
-          <li className="flex items-center gap-2">
-            {beans.length ? (
-              <CheckCircle2 className="h-5 w-5 text-primary" />
-            ) : (
-              <Circle className="h-5 w-5 text-muted-foreground" />
-            )}
-            <span className={beans.length ? "text-muted-foreground" : ""}>
-              Add a bean
-            </span>
-          </li>
-          <li className="flex items-center gap-2">
-            {grinders.length ? (
-              <CheckCircle2 className="h-5 w-5 text-primary" />
-            ) : (
-              <Circle className="h-5 w-5 text-muted-foreground" />
-            )}
-            <span className={grinders.length ? "text-muted-foreground" : ""}>
-              Add a grinder
-            </span>
-          </li>
-          <li className="flex items-center gap-2">
-            {machines.length ? (
-              <CheckCircle2 className="h-5 w-5 text-primary" />
-            ) : (
-              <Circle className="h-5 w-5 text-muted-foreground" />
-            )}
-            <span className={machines.length ? "text-muted-foreground" : ""}>
-              Add a machine
-            </span>
-          </li>
-        </ul>
+        <div className="space-y-2 text-left text-sm">
+          {[
+            { done: beans.length > 0, label: "Add a bean" },
+            { done: grinders.length > 0, label: "Add a grinder" },
+            { done: machines.length > 0, label: "Add a machine" },
+          ].map(({ done, label }) => (
+            <p
+              key={label}
+              className={
+                done ? "text-muted-foreground line-through" : "font-medium"
+              }
+            >
+              {done && <Check className="mr-1.5 inline h-4 w-4 text-primary" />}
+              {label}
+            </p>
+          ))}
+        </div>
         <Button asChild className="h-12 w-full max-w-xs text-base">
           <Link to="/setup">Go to Setup</Link>
         </Button>

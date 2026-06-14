@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from alembic import command
+from app.config import ALLOWED_ORIGINS
 from app.routers import beans, grinders, machines, preferences, recall, shots, users
 
 
@@ -20,7 +21,7 @@ app = FastAPI(title="Koffeeza", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

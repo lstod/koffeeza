@@ -8,7 +8,7 @@ from app.engine import ShotInput, recommend
 from app.models import Bean, Grinder, Machine, Shot
 from app.models.preference import Preference
 from app.models.user import User
-from app.rationale import render_rationale
+from app.rationale import get_rationale
 from app.schemas import ShotCreate, ShotResponse, ShotSuggestionResponse
 
 router = APIRouter(prefix="/shots", tags=["shots"])
@@ -70,7 +70,12 @@ def create_shot(
     instruction = to_instruction(
         grinder, current_native, decision.direction, decision.magnitude_normalized
     )
-    rationale = render_rationale(decision.reason_code, decision.facts)
+    rationale, rationale_source = get_rationale(
+        reason_code=decision.reason_code,
+        facts=decision.facts,
+        direction=decision.direction.value,
+        magnitude_normalized=decision.magnitude_normalized,
+    )
 
     shot = Shot(
         **payload.model_dump(),
@@ -102,4 +107,5 @@ def create_shot(
         confidence=decision.confidence.value,
         instruction=instruction.text,
         rationale=rationale,
+        rationale_source=rationale_source,
     )
